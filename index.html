@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS Pro Analytics | Profesyonel Performans Değerlendirme</title>
+
+    <!-- Kütüphaneler -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --shadow: 0 10px 40px -10px rgba(0,0,0,0.2);
+            --shadow-lg: 0 20px 60px -15px rgba(0,0,0,0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f0f2f5;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--gradient-1);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { font-size: 1.5rem; font-weight: 700; }
+
+        .header-nav {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: white;
+            color: var(--primary);
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover { transform: translateY(-5px); }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-1);
+        }
+
+        .stat-card.tp::before { background: var(--success); }
+        .stat-card.fn::before { background: var(--warning); }
+        .stat-card.fp::before { background: var(--danger); }
+        .stat-card.tn::before { background: var(--info); }
+        .stat-card.score::before { background: var(--gradient-2); }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+        }
+
+        .stat-card.tp .stat-icon { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .stat-card.fn .stat-icon { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .stat-card.fp .stat-icon { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .stat-card.tn .stat-icon { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+        .stat-card.score .stat-icon { background: rgba(245, 87, 108, 0.1); color: #f5576c; }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--dark);
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        /* Upload Area */
+        .upload-zone {
+            border: 3px dashed #d1d5db;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+            background: #f9fafb;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text h3 { margin-bottom: 0.5rem; color: var(--dark); }
+        .upload-text p { color: #6b7280; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--dark);
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: var(--gradient-1);
+            color: white;
+            font-weight: 600;
+            text-align: left;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover { background: #f9fafb; }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-tp { background: #d1fae5; color: #065f46; }
+        .badge-fn { background: #fef3c7; color: #92400e; }
+        .badge-fp { background: #fee2e2; color: #991b1b; }
+        .badge-tn { background: #dbeafe; color: #1e40af; }
+        .badge-lock { background: #f3f4f6; color: #4b5563; }
+        .badge-ai { background: linear-gradient(135deg, #f093fb20, #f5576c20); color: #be185d; border: 1px solid #f093fb40; }
+
+        /* Score Display */
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary) calc(var(--score) * 1%), #e5e7eb 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .score-circle::before {
+            content: '';
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .score-text {
+            position: relative;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-1);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* CS Cards */
+        .cs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .cs-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cs-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: var(--gradient-1);
+            opacity: 0.1;
+            border-radius: 0 0 0 100%;
+        }
+
+        .cs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .cs-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .cs-shift {
+            font-size: 0.875rem;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .cs-score {
+            text-align: right;
+        }
+
+        .cs-score-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .cs-score-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+
+        /* AI Panel */
+        .ai-panel {
+            background: linear-gradient(135deg, rgba(240, 147, 251, 0.1), rgba(245, 87, 108, 0.1));
+            border: 2px solid rgba(240, 147, 251, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #be185d;
+            font-weight: 700;
+        }
+
+        /* Config Panel */
+        .config-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .config-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .config-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 1rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .cs-grid { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        /* Utility */
+        .text-center { text-align: center; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mt-2 { margin-top: 1rem; }
+        .hidden { display: none !important; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div>
+            <h1><i class="fas fa-chart-line"></i> CS Pro Analytics</h1>
+        </div>
+        <nav class="header-nav">
+            <button class="nav-btn active" onclick="showSection('upload')">
+                <i class="fas fa-upload"></i> Yükle
+            </button>
+            <button class="nav-btn" onclick="showSection('dashboard')">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </button>
+            <button class="nav-btn" onclick="showSection('cs-scores')">
+                <i class="fas fa-star"></i> CS Puanları
+            </button>
+            <button class="nav-btn" onclick="showSection('analysis')">
+                <i class="fas fa-brain"></i> AI Analiz
+            </button>
+            <button class="nav-btn" onclick="showSection('config')">
+                <i class="fas fa-cog"></i> Ayarlar
+            </button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Upload Section -->
+        <section id="upload-section" class="section active">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-file-excel"></i>
+                        Excel Rapor Yükleme
+                    </div>
+                </div>
+
+                <div class="upload-zone" id="dropZone">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        <h3>Dosyanızı Buraya Sürükleyin</h3>
+                        <p>veya tıklayarak seçin (.xlsx, .xls)</p>
+                    </div>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+                </div>
+
+                <div class="mt-2" style="display: flex; gap: 1rem; justify-content: center;">
+                    <button class="btn btn-secondary" onclick="loadDemoData()">
+                        <i class="fas fa-vial"></i> Demo Veri Yükle
+                    </button>
+                    <button class="btn btn-secondary" onclick="showSection('config')">
+                        <i class="fas fa-cog"></i> Yapılandırma
+                    </button>
+                </div>
+            </div>
+
+            <!-- Column Mapping -->
+            <div id="mappingPanel" class="card hidden">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-columns"></i>
+                        Sütun Eşleştirme
+                    </div>
+                </div>
+                <p class="mb-2" style="color: #6b7280;">Excel sütunlarını sistem alanlarıyla eşleştirin:</p>
+                <div id="mappingContainer"></div>
+                <div class="mt-2">
+                    <button class="btn btn-primary" onclick="processData()">
+                        <i class="fas fa-play"></i> Analizi Başlat
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="section">
+            <div class="stats-grid">
+                <div class="stat-card tp">
+                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-value" id="stat-tp">0</div>
+                    <div class="stat-label">Doğru İşlem (TP)</div>
+                    <div class="stat-change"><i class="fas fa-arrow-up"></i> Hedef: >80%</div>
+                </div>
+
+                <div class="stat-card fn">
+                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="stat-value" id="stat-fn">0</div>
+                    <div class="stat-label">Eksik İşlem (FN)</div>
+                    <div class="stat-change" style="background: rgba(239,68,68,0.1); color: var(--danger);">
+                        <i class="fas fa-arrow-down"></i> Risk
+                    </div>
+                </div>
+
+                <div class="stat-card fp">
+                    <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                    <div class="stat-value" id="stat-fp">0</div>
+                    <div class="stat-label">Fazla İşlem (FP)</div>
+                </div>
+
+                <div class="stat-card tn">
+                    <div class="stat-icon"><i class="fas fa-minus-circle"></i></div>
+                    <div class="stat-value" id="stat-tn">0</div>
+                    <div class="stat-label">Doğru Bekleme (TN)</div>
+                </div>
+
+                <div class="stat-card score">
+                    <div class="stat-icon"><i class="fas fa-lock"></i></div>
+                    <div class="stat-value" id="stat-lock">0</div>
+                    <div class="stat-label">24s Kilit</div>
+                </div>
+
+                <div class="stat-card score">
+                    <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Toplam Rapor</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-chart-bar"></i> Dağılım Grafikleri</div>
+                    </div>
+                    <canvas id="mainChart" height="200"></canvas>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-clock"></i> Saatlik Dağılım</div>
+                    </div>
+                    <canvas id="hourChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-table"></i> Son İşlemler</div>
+                    <button class="btn btn-sm btn-primary" onclick="showSection('details')">
+                        Tümünü Gör <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table id="recentTable">
+                        <thead>
+                            <tr>
+                                <th>Zaman</th>
+                                <th>ID</th>
+                                <th>Tip</th>
+                                <th>CS</th>
+                                <th>Sonuç</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- CS Scores Section -->
+        <section id="cs-scores-section" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-trophy"></i>
+                        CS Performans Puanlaması
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-sm btn-secondary" onclick="exportScores()">
+                            <i class="fas fa-download"></i> Rapor İndir
+                        </button>
+                    </div>
+                </div>
+
+                <div class="ai-panel">
+                    <div class="ai-header">
+                        <i class="fas fa-info-circle"></i>
+                        Puanlama Kriterleri
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <strong>1. Etkili İşlem Oranı (%60)</strong><br>
+                            <small>Standart: Doğru işlenen ÷ Toplam geri bildirim</small>
+                            <ul style="margin-top: 0.5rem; padding-left: 1.2rem; font-size: 0.9rem; color: #4b5563;">
+                                <li>Oran ≥ %80 → <strong>18 puan</strong></li>
+                                <li>%60 ≤ Oran < %80 → <strong>13 puan</strong></li>
+                                <li>%40 ≤ Oran < %60 → <strong>8 puan</strong></li>
+                                <li>Oran < %40 → <strong>3 puan</strong></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <strong>2. İşlem Süresi (%40)</strong><br>
+                            <small>Standart: İşlem zamanı - Geri bildirim zamanı</small>
+                            <ul style="margin-top: 0.5rem; padding-left: 1.2rem; font-size: 0.9rem; color: #4b5563;">
+                                <li>Süre ≤ 24 saat → <strong>12 puan</strong></li>
+                                <li>Süre > 24 saat → <strong>4 puan</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(0,0,0,0.1);">
+                        <strong>Toplam Puan = (Etkili İşlem Puanı × 0.60) + (İşlem Süresi Puanı × 0.40)</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div id="csScoresContainer" class="cs-grid"></div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-chart-line"></i> CS Karşılaştırma</div>
+                </div>
+                <canvas id="csChart" height="100"></canvas>
+            </div>
+        </section>
+
+        <!-- AI Analysis Section -->
+        <section id="analysis-section" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-robot"></i> Yapay Zeka Analizi</div>
+                </div>
+
+                <div class="config-group">
+                    <label class="config-label">OpenAI API Key</label>
+                    <input type="password" id="apiKey" class="config-input" placeholder="sk-...">
+                    <small style="color: #6b7280;">API key sadece tarayıcınızda saklanır, sunucuya gönderilmez.</small>
+                </div>
+
+                <div class="config-group">
+                    <label class="config-label">Analiz Modeli</label>
+                    <select id="aiModel" class="config-input">
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Hızlı)</option>
+                        <option value="gpt-4">GPT-4 (Detaylı)</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" onclick="runAIAnalysis()">
+                    <i class="fas fa-magic"></i> AI Analizi Başlat
+                </button>
+            </div>
+
+            <div id="aiResults"></div>
+        </section>
+
+        <!-- Details Section -->
+        <section id="details-section" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-list"></i> Detaylı Kayıtlar</div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <select id="filterCS" class="config-input" style="width: auto;" onchange="applyFilters()">
+                            <option value="">Tüm CS'ler</option>
+                        </select>
+                        <select id="filterType" class="config-input" style="width: auto;" onchange="applyFilters()">
+                            <option value="">Tüm Tipler</option>
+                        </select>
+                        <select id="filterResult" class="config-input" style="width: auto;" onchange="applyFilters()">
+                            <option value="">Tüm Sonuçlar</option>
+                            <option value="TP">TP - Doğru</option>
+                            <option value="FN">FN - Eksik</option>
+                            <option value="FP">FP - Fazla</option>
+                            <option value="TN">TN - Doğru Pasif</option>
+                            <option value="LOCK">Kilitli</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="exportData()">
+                            <i class="fas fa-file-excel"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+                    <table id="detailsTable">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Şikayet Edilen</th>
+                                <th>Tip</th>
+                                <th>CS</th>
+                                <th>Değerlendirme</th>
+                                <th>Süre</th>
+                                <th>Detay</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Config Section -->
+        <section id="config-section" class="section">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-users"></i> Vardiya Ayarları</div>
+                    </div>
+                    <div id="shiftConfig"></div>
+                    <button class="btn btn-primary mt-2" onclick="saveShifts()">
+                        <i class="fas fa-save"></i> Kaydet
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-ruler"></i> Değerlendirme Kuralları</div>
+                    </div>
+                    <div id="rulesConfig"></div>
+                    <button class="btn btn-primary mt-2" onclick="saveRules()">
+                        <i class="fas fa-save"></i> Kaydet
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Detay</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GLOBAL DEĞİŞKENLER ====================
+        let rawData = [];
+        let processedData = [];
+        let columnMapping = {};
+        let headers = [];
+        let charts = {};
+
+        // Varsayılan Ayarlar
+        let config = {
+            shifts: {
+                'Tolga': { start: 2, end: 8, days: [0,1,2,3,4,5,6] },
+                'shikai': { start: 2, end: 8, days: [0,1,2,3,4,5,6] },
+                'Derin': { start: 8, end: 14, days: [0,1,2,3,4,5,6] },
+                'Deniz': { start: 14, end: 20, days: [0,1,2,3,4,5,6] },
+                'Çiğdem': { start: 20, end: 23, days: [0,1,2,3,4,5,6] },
+                'Dilan': { start: 23, end: 2, days: [0,1,2,3,4,5,6], overnight: true }
+            },
+            rules: {
+                'Porn': { action: 'required', severity: 'high' },
+                'Abuse': { action: 'required', severity: 'high' },
+                'Harassment': { action: 'required', severity: 'high' },
+                'Religion': { action: 'optional', severity: 'low' },
+                'Spam': { action: 'optional', severity: 'low' },
+                'Advertising': { action: 'contextual', severity: 'medium' }
+            }
+        };
+
+        // LocalStorage'dan ayarları yükle
+        function loadConfig() {
+            const saved = localStorage.getItem('cs_config');
+            if (saved) config = JSON.parse(saved);
+        }
+        loadConfig();
+
+        // ==================== NAVİGASYON ====================
+        function showSection(sectionName) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+            const sectionMap = {
+                'upload': 'upload-section',
+                'dashboard': 'dashboard-section',
+                'cs-scores': 'cs-scores-section',
+                'analysis': 'analysis-section',
+                'details': 'details-section',
+                'config': 'config-section'
+            };
+
+            if (sectionMap[sectionName]) {
+                document.getElementById(sectionMap[sectionName]).classList.add('active');
+                event.target.closest('.nav-btn').classList.add('active');
+
+                if (sectionName === 'cs-scores' && processedData.length > 0) {
+                    renderCSScores();
+                }
+            }
+        }
+
+        // ==================== DOSYA YÜKLEME ====================
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                headers = jsonData[0];
+                rawData = jsonData.slice(1).map(row => {
+                    const obj = {};
+                    headers.forEach((h, i) => obj[h] = row[i]);
+                    return obj;
+                });
+
+                showMappingPanel();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function showMappingPanel() {
+            document.getElementById('mappingPanel').classList.remove('hidden');
+            const container = document.getElementById('mappingContainer');
+            container.innerHTML = '';
+
+            const fields = [
+                { key: 'report_time', label: '📅 Rapor Zamanı (举报时间)', required: true },
+                { key: 'reported_id', label: '🆔 Şikayet Edilen ID (被举报人)', required: true },
+                { key: 'report_type', label: '🏷️ Rapor Tipi (举报类型)', required: true },
+                { key: 'report_text', label: '📝 Rapor Metni (举报内容)', required: false },
+                { key: 'handler_cs', label: '👤 İşlem Yapan CS (回复人)', required: false },
+                { key: 'handle_time', label: '⚡ İşlem Zamanı (回复时间)', required: false },
+                { key: 'action_result', label: '✅ İşlem Sonucu (处罚结果)', required: false }
+            ];
+
+            fields.forEach(field => {
+                const div = document.createElement('div');
+                div.className = 'config-group';
+                div.innerHTML = `
+                    <label class="config-label">${field.label} ${field.required ? '<span style="color:red">*</span>' : ''}</label>
+                    <select class="config-input" id="map_${field.key}">
+                        <option value="">Seçin...</option>
+                        ${headers.map(h => `<option value="${h}">${h}</option>`).join('')}
+                    </select>
+                `;
+                container.appendChild(div);
+
+                // Otomatik eşleştirme
+                const select = div.querySelector('select');
+                const match = headers.find(h => 
+                    h.toLowerCase().includes(field.key.toLowerCase()) ||
+                    field.label.toLowerCase().includes(h.toLowerCase())
+                );
+                if (match) select.value = match;
+            });
+        }
+
+        // ==================== VERİ ANALİZİ ====================
+        function processData() {
+            // Mapping oku
+            columnMapping = {
+                report_time: document.getElementById('map_report_time').value,
+                reported_id: document.getElementById('map_reported_id').value,
+                report_type: document.getElementById('map_report_type').value,
+                report_text: document.getElementById('map_report_text')?.value || '',
+                handler_cs: document.getElementById('map_handler_cs')?.value || '',
+                handle_time: document.getElementById('map_handle_time')?.value || '',
+                action_result: document.getElementById('map_action_result')?.value || ''
+            };
+
+            if (!columnMapping.report_time || !columnMapping.reported_id) {
+                alert('Zorunlu alanları doldurun!');
+                return;
+            }
+
+            analyzeData();
+            showSection('dashboard');
+            renderDashboard();
+        }
+
+        function analyzeData() {
+            processedData = [];
+            const userLastAction = {};
+
+            // Tarihe göre sırala
+            rawData.sort((a, b) => {
+                return new Date(a[columnMapping.report_time]) - new Date(b[columnMapping.report_time]);
+            });
+
+            rawData.forEach((row, index) => {
+                const reportTime = new Date(row[columnMapping.report_time]);
+                const reportedId = row[columnMapping.reported_id];
+                const reportType = row[columnMapping.report_type] || 'Unknown';
+                const handler = row[columnMapping.handler_cs] || '';
+                const handleTime = row[columnMapping.handle_time] ? new Date(row[columnMapping.handle_time]) : null;
+                const actionResult = row[columnMapping.action_result] || '';
+                const reportText = row[columnMapping.report_text] || '';
+
+                // Vardiya bul
+                const hour = reportTime.getHours();
+                let shiftCS = '';
+
+                for (const [cs, shift] of Object.entries(config.shifts)) {
+                    if (shift.overnight) {
+                        if (hour >= shift.start || hour < shift.end) {
+                            shiftCS = cs;
+                            break;
+                        }
+                    } else {
+                        if (hour >= shift.start && hour < shift.end) {
+                            shiftCS = cs;
+                            break;
+                        }
+                    }
+                }
+
+                // 24 saat kilidi kontrolü
+                let lockStatus = 'NONE';
+                let lockedBy = null;
+                let timeDiff = null;
+
+                if (userLastAction[reportedId]) {
+                    const lastAction = userLastAction[reportedId];
+                    timeDiff = (reportTime - lastAction.time) / (1000 * 60 * 60);
+
+                    if (timeDiff < 24) {
+                        lockStatus = 'LOCKED';
+                        lockedBy = lastAction.cs;
+                    }
+                }
+
+                // İşlem yapıldı mı?
+                const actionTaken = !!(handleTime || actionResult);
+
+                // İşlem süresi (saat)
+                let processDuration = null;
+                if (actionTaken && handleTime) {
+                    processDuration = (handleTime - reportTime) / (1000 * 60 * 60);
+                }
+
+                // Beklenen işlem
+                let expectedAction = 'no';
+                const rule = config.rules[reportType];
+                if (rule) {
+                    if (rule.action === 'required') expectedAction = 'yes';
+                    else if (rule.action === 'contextual') expectedAction = 'maybe';
+                }
+
+                // Değerlendirme
+                let evaluation = '';
+                let notes = '';
+
+                if (lockStatus === 'LOCKED' && !actionTaken) {
+                    evaluation = 'LOCK_OK';
+                    notes = `24s kilit: ${lockedBy}`;
+                } else if (lockStatus === 'LOCKED' && actionTaken) {
+                    evaluation = 'LOCK_VIOLATION';
+                    notes = 'Kilitli kullanıcıya işlem!';
+                } else if (expectedAction === 'yes' && actionTaken) {
+                    evaluation = 'TP';
+                    notes = 'Doğru işlem';
+                } else if (expectedAction === 'yes' && !actionTaken) {
+                    evaluation = 'FN';
+                    notes = 'İşlem gerekliydi';
+                } else if (expectedAction === 'no' && actionTaken) {
+                    evaluation = 'FP';
+                    notes = 'Gereksiz işlem';
+                } else {
+                    evaluation = 'TN';
+                    notes = 'İşlem gerekmezdi';
+                }
+
+                // Son işlem zamanını güncelle
+                if (actionTaken && handleTime) {
+                    userLastAction[reportedId] = {
+                        time: handleTime,
+                        cs: handler || shiftCS
+                    };
+                }
+
+                processedData.push({
+                    ...row,
+                    _reportTime: reportTime,
+                    _handleTime: handleTime,
+                    _reportedId: reportedId,
+                    _reportType: reportType,
+                    _reportText: reportText,
+                    _handler: handler,
+                    _shift: shiftCS,
+                    _hour: hour,
+                    _actionTaken: actionTaken,
+                    _processDuration: processDuration,
+                    _expectedAction: expectedAction,
+                    _evaluation: evaluation,
+                    _lockStatus: lockStatus,
+                    _lockedBy: lockedBy,
+                    _notes: notes
+                });
+            });
+        }
+
+        // ==================== DASHBOARD ====================
+        function renderDashboard() {
+            // İstatistikler
+            const stats = {
+                TP: processedData.filter(d => d._evaluation === 'TP').length,
+                FN: processedData.filter(d => d._evaluation === 'FN').length,
+                FP: processedData.filter(d => d._evaluation === 'FP').length,
+                TN: processedData.filter(d => d._evaluation === 'TN').length,
+                LOCK: processedData.filter(d => d._lockStatus === 'LOCKED').length,
+                total: processedData.length
+            };
+
+            document.getElementById('stat-tp').textContent = stats.TP;
+            document.getElementById('stat-fn').textContent = stats.FN;
+            document.getElementById('stat-fp').textContent = stats.FP;
+            document.getElementById('stat-tn').textContent = stats.TN;
+            document.getElementById('stat-lock').textContent = stats.LOCK;
+            document.getElementById('stat-total').textContent = stats.total;
+
+            // Grafikler
+            renderCharts();
+
+            // Son işlemler tablosu
+            renderRecentTable();
+        }
+
+        function renderCharts() {
+            // Ana dağılım grafiği
+            const ctx1 = document.getElementById('mainChart').getContext('2d');
+            if (charts.main) charts.main.destroy();
+
+            const counts = {
+                'TP': processedData.filter(d => d._evaluation === 'TP').length,
+                'FN': processedData.filter(d => d._evaluation === 'FN').length,
+                'FP': processedData.filter(d => d._evaluation === 'FP').length,
+                'TN': processedData.filter(d => d._evaluation === 'TN').length,
+                'LOCK': processedData.filter(d => d._lockStatus === 'LOCKED').length
+            };
+
+            charts.main = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Doğru İşlem (TP)', 'Eksik (FN)', 'Fazla (FP)', 'Doğru Pasif (TN)', 'Kilitli'],
+                    datasets: [{
+                        data: [counts.TP, counts.FN, counts.FP, counts.TN, counts.LOCK],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#6b7280'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // Saatlik dağılım
+            const hourCounts = {};
+            for (let i = 0; i < 24; i++) hourCounts[i] = 0;
+            processedData.forEach(d => hourCounts[d._hour]++);
+
+            const ctx2 = document.getElementById('hourChart').getContext('2d');
+            if (charts.hour) charts.hour.destroy();
+
+            charts.hour = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(hourCounts).map(h => h + ':00'),
+                    datasets: [{
+                        label: 'Rapor Sayısı',
+                        data: Object.values(hourCounts),
+                        backgroundColor: '#4f46e5',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function renderRecentTable() {
+            const tbody = document.querySelector('#recentTable tbody');
+            const recent = processedData.slice(-10).reverse();
+
+            tbody.innerHTML = recent.map(row => `
+                <tr>
+                    <td>${row._reportTime.toLocaleString()}</td>
+                    <td>${row._reportedId}</td>
+                    <td>${row._reportType}</td>
+                    <td>${row._shift}</td>
+                    <td><span class="badge badge-${row._evaluation.toLowerCase().replace('_ok','')}">${row._evaluation}</span></td>
+                    <td>${row._actionTaken ? '✅' : '❌'}</td>
+                </tr>
+            `).join('');
+        }
+
+        // ==================== CS PUANLAMA ====================
+        function calculateCSScore(csName, csData) {
+            // 1. Etkili İşlem Oranı (%60 ağırlık)
+            const totalReports = csData.length;
+            const correctActions = csData.filter(d => d._evaluation === 'TP' || d._evaluation === 'TN').length;
+            const effectivenessRate = totalReports > 0 ? (correctActions / totalReports) * 100 : 0;
+
+            let effectivenessScore = 0;
+            if (effectivenessRate >= 80) effectivenessScore = 18;
+            else if (effectivenessRate >= 60) effectivenessScore = 13;
+            else if (effectivenessRate >= 40) effectivenessScore = 8;
+            else effectivenessScore = 3;
+
+            // 2. İşlem Süresi (%40 ağırlık)
+            const processedReports = csData.filter(d => d._actionTaken && d._processDuration !== null);
+            let speedScore = 0;
+
+            if (processedReports.length > 0) {
+                const avgTime = processedReports.reduce((sum, d) => sum + d._processDuration, 0) / processedReports.length;
+                speedScore = avgTime <= 24 ? 12 : 4;
+            } else {
+                speedScore = 0; // İşlem yapılmamış
+            }
+
+            // Toplam Puan (30 üzerinden)
+            const totalScore = (effectivenessScore * 0.6) + (speedScore * 0.4);
+
+            return {
+                effectivenessRate: effectivenessRate.toFixed(1),
+                effectivenessScore,
+                speedScore,
+                totalScore: totalScore.toFixed(1),
+                totalReports,
+                processedCount: processedReports.length,
+                avgProcessTime: processedReports.length > 0 ? 
+                    (processedReports.reduce((sum, d) => sum + d._processDuration, 0) / processedReports.length).toFixed(1) : 0
+            };
+        }
+
+        function renderCSScores() {
+            const container = document.getElementById('csScoresContainer');
+            container.innerHTML = '';
+
+            // CS'leri grupla
+            const csGroups = {};
+            processedData.forEach(d => {
+                const cs = d._shift || 'Bilinmiyor';
+                if (!csGroups[cs]) csGroups[cs] = [];
+                csGroups[cs].push(d);
+            });
+
+            const scores = [];
+
+            Object.entries(csGroups).forEach(([csName, csData]) => {
+                const score = calculateCSScore(csName, csData);
+                scores.push({ name: csName, ...score });
+
+                const card = document.createElement('div');
+                card.className = 'cs-card';
+                card.innerHTML = `
+                    <div class="cs-header">
+                        <div>
+                            <div class="cs-name">${csName}</div>
+                            <div class="cs-shift">
+                                <i class="fas fa-clock"></i>
+                                ${getShiftTime(csName)}
+                            </div>
+                        </div>
+                        <div class="cs-score">
+                            <div class="cs-score-value">${score.totalScore}</div>
+                            <div class="cs-score-label">Toplam Puan</div>
+                        </div>
+                    </div>
+
+                    <div style="margin: 1rem 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Etkililik: %${score.effectivenessRate}</span>
+                            <span>${score.effectivenessScore} puan</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${(score.effectivenessScore/18)*100}%; background: var(--success);"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin: 1rem 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Hız: ${score.avgProcessTime}s</span>
+                            <span>${score.speedScore} puan</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${(score.speedScore/12)*100}%; background: var(--info);"></div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; font-size: 0.875rem;">
+                        <div>
+                            <div style="color: #6b7280;">Toplam Rapor</div>
+                            <div style="font-weight: 700; font-size: 1.1rem;">${score.totalReports}</div>
+                        </div>
+                        <div>
+                            <div style="color: #6b7280;">İşlem Yapılan</div>
+                            <div style="font-weight: 700; font-size: 1.1rem;">${score.processedCount}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // CS Karşılaştırma Grafiği
+            const ctx = document.getElementById('csChart').getContext('2d');
+            if (charts.cs) charts.cs.destroy();
+
+            charts.cs = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: scores.map(s => s.name),
+                    datasets: [
+                        {
+                            label: 'Toplam Puan',
+                            data: scores.map(s => s.totalScore),
+                            backgroundColor: '#4f46e5',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Etkililik',
+                            data: scores.map(s => s.effectivenessScore),
+                            backgroundColor: '#10b981',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Hız',
+                            data: scores.map(s => s.speedScore),
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 30 }
+                    }
+                }
+            });
+        }
+
+        function getShiftTime(cs) {
+            const shift = config.shifts[cs];
+            if (!shift) return '';
+            if (shift.overnight) return `23:00 - 02:00`;
+            return `${String(shift.start).padStart(2,'0')}:00 - ${String(shift.end).padStart(2,'0')}:00`;
+        }
+
+        // ==================== AI ANALİZ ====================
+        async function runAIAnalysis() {
+            const apiKey = document.getElementById('apiKey').value;
+            const model = document.getElementById('aiModel').value;
+
+            if (!apiKey) {
+                alert('Lütfen API key girin!');
+                return;
+            }
+
+            localStorage.setItem('openai_key', apiKey);
+
+            const btn = event.target;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analiz ediliyor...';
+            btn.disabled = true;
+
+            const container = document.getElementById('aiResults');
+            container.innerHTML = '<div class="card"><div class="text-center"><i class="fas fa-brain fa-3x animate-pulse" style="color: var(--primary);"></i><p>AI analiz yapıyor...</p></div></div>';
+
+            // FN ve FP olan kayıtları analiz et
+            const analyzeData = processedData.filter(d => d._evaluation === 'FN' || d._evaluation === 'FP').slice(0, 10);
+
+            const results = [];
+
+            for (const row of analyzeData) {
+                try {
+                    const prompt = `Aşağıdaki şikayet kaydını analiz et ve CS'nin kararını değerlendir:
+
+Şikayet Metni: ${row._reportText || 'Yok'}
+Şikayet Tipi: ${row._reportType}
+Yapılan İşlem: ${row._actionTaken ? 'İşlem yapılmış' : 'İşlem yapılmamış'}
+
+Bu durumda işlem yapılması gerekiyor muydu? Kısa ve net yanıt ver.`;
+
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: model,
+                            messages: [
+                                { role: 'system', content: 'Sen bir müşteri hizmetleri kalite kontrol uzmanısın.' },
+                                { role: 'user', content: prompt }
+                            ],
+                            max_tokens: 150
+                        })
+                    });
+
+                    const data = await response.json();
+                    const aiComment = data.choices?.[0]?.message?.content || 'Yanıt alınamadı';
+
+                    results.push({
+                        ...row,
+                        aiComment
+                    });
+                } catch (error) {
+                    results.push({
+                        ...row,
+                        aiComment: 'Hata: ' + error.message
+                    });
+                }
+            }
+
+            // Sonuçları göster
+            container.innerHTML = results.map(r => `
+                <div class="card" style="border-left: 4px solid ${r._evaluation === 'FN' ? 'var(--warning)' : 'var(--danger)'};">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <span class="badge badge-${r._evaluation.toLowerCase()}">${r._evaluation}</span>
+                            <span class="badge badge-ai"><i class="fas fa-robot"></i> AI</span>
+                        </div>
+                        <small style="color: #6b7280;">${r._reportTime.toLocaleString()}</small>
+                    </div>
+                    <p style="margin: 0.5rem 0; font-weight: 600;">ID: ${r._reportedId} | Tip: ${r._reportType}</p>
+                    <p style="color: #4b5563; margin-bottom: 0.5rem;">${r._reportText || 'Metin yok'}</p>
+                    <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                        <strong style="color: var(--primary);"><i class="fas fa-robot"></i> AI Yorumu:</strong>
+                        <p style="margin: 0.25rem 0 0 0; color: #374151;">${r.aiComment}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            btn.innerHTML = '<i class="fas fa-magic"></i> AI Analizi Başlat';
+            btn.disabled = false;
+        }
+
+        // ==================== DETAYLAR & FİLTRELEME ====================
+        function applyFilters() {
+            const cs = document.getElementById('filterCS').value;
+            const type = document.getElementById('filterType').value;
+            const result = document.getElementById('filterResult').value;
+
+            const filtered = processedData.filter(row => {
+                if (cs && row._shift !== cs) return false;
+                if (type && row._reportType !== type) return false;
+                if (result && !row._evaluation.includes(result)) return false;
+                return true;
+            });
+
+            renderDetailsTable(filtered);
+        }
+
+        function renderDetailsTable(data) {
+            const tbody = document.querySelector('#detailsTable tbody');
+            tbody.innerHTML = data.map(row => `
+                <tr>
+                    <td>${row._reportTime.toLocaleString()}</td>
+                    <td>${row._reportedId}</td>
+                    <td>${row._reportType}</td>
+                    <td>${row._shift}</td>
+                    <td><span class="badge badge-${row._evaluation.toLowerCase().replace('_ok','')}">${row._evaluation}</span></td>
+                    <td>${row._processDuration ? row._processDuration.toFixed(1) + 's' : '-'}</td>
+                    <td><button class="btn btn-sm btn-secondary" onclick="showDetail('${row._reportedId}', '${row._reportTime}')">Detay</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function showDetail(id, time) {
+            const row = processedData.find(d => d._reportedId === id && d._reportTime.toISOString() === time);
+            if (!row) return;
+
+            document.getElementById('modalTitle').textContent = 'Rapor Detayı';
+            document.getElementById('modalBody').innerHTML = `
+                <p><strong>ID:</strong> ${row._reportedId}</p>
+                <p><strong>Zaman:</strong> ${row._reportTime.toLocaleString()}</p>
+                <p><strong>Vardiya:</strong> ${row._shift}</p>
+                <p><strong>Tip:</strong> ${row._reportType}</p>
+                <p><strong>Sonuç:</strong> <span class="badge badge-${row._evaluation.toLowerCase()}">${row._evaluation}</span></p>
+                <p><strong>Not:</strong> ${row._notes}</p>
+                <hr style="margin: 1rem 0;">
+                <p><strong>Şikayet Metni:</strong></p>
+                <p style="background: #f3f4f6; padding: 1rem; border-radius: 8px;">${row._reportText || 'Yok'}</p>
+            `;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // ==================== EXPORT ====================
+        function exportData() {
+            const exportData = processedData.map(row => ({
+                ...row,
+                'Vardiya': row._shift,
+                'Değerlendirme': row._evaluation,
+                'Islem_Saati': row._hour,
+                'Kilit_Durumu': row._lockStatus,
+                'Notlar': row._notes
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Analiz");
+            XLSX.writeFile(wb, "CS_Analiz_Raporu.xlsx");
+        }
+
+        function exportScores() {
+            const csGroups = {};
+            processedData.forEach(d => {
+                const cs = d._shift || 'Bilinmiyor';
+                if (!csGroups[cs]) csGroups[cs] = [];
+                csGroups[cs].push(d);
+            });
+
+            const scores = Object.entries(csGroups).map(([name, data]) => ({
+                'CS Adı': name,
+                ...calculateCSScore(name, data)
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(scores);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "CS_Puanlari");
+            XLSX.writeFile(wb, "CS_Performans_Puanlari.xlsx");
+        }
+
+        // ==================== CONFIG ====================
+        function renderConfig() {
+            // Vardiya config
+            const shiftContainer = document.getElementById('shiftConfig');
+            shiftContainer.innerHTML = Object.entries(config.shifts).map(([name, shift]) => `
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center;">
+                    <input type="text" class="config-input" value="${name}" placeholder="CS Adı" readonly>
+                    <input type="number" class="config-input" value="${shift.start}" placeholder="Başlangıç" id="shift_${name}_start">
+                    <input type="number" class="config-input" value="${shift.end}" placeholder="Bitiş" id="shift_${name}_end">
+                    <label style="display: flex; align-items: center; gap: 0.25rem;">
+                        <input type="checkbox" ${shift.overnight ? 'checked' : ''} id="shift_${name}_overnight"> Gece
+                    </label>
+                </div>
+            `).join('');
+
+            // Kurallar config
+            const rulesContainer = document.getElementById('rulesConfig');
+            rulesContainer.innerHTML = Object.entries(config.rules).map(([type, rule]) => `
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <input type="text" class="config-input" value="${type}" placeholder="Tip" id="rule_${type}_name">
+                    <select class="config-input" id="rule_${type}_action">
+                        <option value="required" ${rule.action === 'required' ? 'selected' : ''}>Gerekli</option>
+                        <option value="optional" ${rule.action === 'optional' ? 'selected' : ''}>Opsiyonel</option>
+                        <option value="contextual" ${rule.action === 'contextual' ? 'selected' : ''}>Bağlamsal</option>
+                    </select>
+                    <select class="config-input" id="rule_${type}_severity">
+                        <option value="high" ${rule.severity === 'high' ? 'selected' : ''}>Yüksek</option>
+                        <option value="medium" ${rule.severity === 'medium' ? 'selected' : ''}>Orta</option>
+                        <option value="low" ${rule.severity === 'low' ? 'selected' : ''}>Düşük</option>
+                    </select>
+                </div>
+            `).join('');
+        }
+
+        function saveShifts() {
+            Object.keys(config.shifts).forEach(name => {
+                config.shifts[name].start = parseInt(document.getElementById(`shift_${name}_start`).value);
+                config.shifts[name].end = parseInt(document.getElementById(`shift_${name}_end`).value);
+                config.shifts[name].overnight = document.getElementById(`shift_${name}_overnight`).checked;
+            });
+            localStorage.setItem('cs_config', JSON.stringify(config));
+            alert('Vardiya ayarları kaydedildi!');
+        }
+
+        function saveRules() {
+            // Kuralları güncelle
+            const newRules = {};
+            Object.keys(config.rules).forEach(type => {
+                const name = document.getElementById(`rule_${type}_name`).value;
+                newRules[name] = {
+                    action: document.getElementById(`rule_${type}_action`).value,
+                    severity: document.getElementById(`rule_${type}_severity`).value
+                };
+            });
+            config.rules = newRules;
+            localStorage.setItem('cs_config', JSON.stringify(config));
+            alert('Kurallar kaydedildi!');
+        }
+
+        // Config sekmesi açılınca render et
+        document.querySelector('.nav-btn[onclick="showSection('config')"]').addEventListener('click', renderConfig);
+
+        // ==================== DEMO DATA ====================
+        function loadDemoData() {
+            // Demo veri oluştur
+            const demoData = [];
+            const types = Object.keys(config.rules);
+            const csList = Object.keys(config.shifts);
+
+            for (let i = 0; i < 100; i++) {
+                const date = new Date('2026-02-26');
+                date.setHours(Math.floor(Math.random() * 24));
+                date.setMinutes(Math.floor(Math.random() * 60));
+
+                const type = types[Math.floor(Math.random() * types.length)];
+                const hasAction = Math.random() > 0.3;
+
+                demoData.push({
+                    '举报时间': date.toISOString(),
+                    '被举报人': 'user_' + Math.floor(Math.random() * 50),
+                    '举报类型': type,
+                    '举报内容': `Demo şikayet metni ${i}`,
+                    '回复人': hasAction ? csList[Math.floor(Math.random() * csList.length)] : '',
+                    '回复时间': hasAction ? new Date(date.getTime() + Math.random() * 3600000).toISOString() : '',
+                    '处罚结果': hasAction ? 'MuteAccount' : ''
+                });
+            }
+
+            headers = Object.keys(demoData[0]);
+            rawData = demoData;
+            showMappingPanel();
+        }
+
+        // API Key varsa yükle
+        const savedKey = localStorage.getItem('openai_key');
+        if (savedKey) document.getElementById('apiKey').value = savedKey;
+    </script>
+</body>
+</html>
