@@ -3,186 +3,315 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS Pro Analytics</title>
+    <title>CS Pro Analytics - Rapor Analiz Sistemi</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .header h1 { margin: 0; }
-        .nav { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        .nav button { background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .nav button:hover, .nav button.active { background: white; color: #667eea; }
-        .section { display: none; background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .section.active { display: block; }
-        .upload-zone { border: 3px dashed #ccc; border-radius: 10px; padding: 40px; text-align: center; background: #fafafa; cursor: pointer; transition: all 0.3s; }
-        .upload-zone:hover { border-color: #667eea; background: #f0f0ff; }
-        .btn { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 5px; }
-        .btn:hover { background: #5568d3; }
-        .btn-secondary { background: #6c757d; }
-        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; border-top: 4px solid #667eea; }
-        .stat-value { font-size: 32px; font-weight: bold; color: #333; margin: 10px 0; }
-        .stat-label { color: #666; font-size: 14px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #667eea; color: white; }
-        tr:hover { background: #f5f5f5; }
-        .badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
-        .badge-tp { background: #d4edda; color: #155724; }
-        .badge-fn { background: #fff3cd; color: #856404; }
-        .badge-fp { background: #f8d7da; color: #721c24; }
-        .badge-tn { background: #d1ecf1; color: #0c5460; }
-        .badge-lock { background: #e2e3e5; color: #383d41; }
-        .config-group { margin: 15px 0; }
-        .config-group label { display: block; font-weight: bold; margin-bottom: 5px; }
-        .config-group select, .config-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
-        .cs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0; }
-        .cs-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #667eea; }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { 
+            background: rgba(255,255,255,0.95); 
+            padding: 20px; 
+            border-radius: 15px; 
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { color: #667eea; font-size: 28px; }
+        .nav-tabs { display: flex; gap: 10px; }
+        .nav-tab { 
+            padding: 10px 20px; 
+            border: none; 
+            background: #f3f4f6; 
+            border-radius: 8px; 
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .nav-tab:hover, .nav-tab.active { background: #667eea; color: white; }
+        .card { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 25px; 
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .upload-area { 
+            border: 3px dashed #d1d5db; 
+            border-radius: 15px; 
+            padding: 60px 40px; 
+            text-align: center;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover { border-color: #667eea; background: #f0f0ff; }
+        .btn { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 8px; 
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .btn-secondary { background: #6b7280; }
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin: 20px 0;
+        }
+        .stat-card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            text-align: center;
+            border-top: 4px solid;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-card.tp { border-color: #10b981; }
+        .stat-card.fn { border-color: #f59e0b; }
+        .stat-card.fp { border-color: #ef4444; }
+        .stat-card.tn { border-color: #3b82f6; }
+        .stat-card.lock { border-color: #6b7280; }
+        .stat-value { font-size: 36px; font-weight: 800; color: #1f2937; margin: 10px 0; }
+        .stat-label { color: #6b7280; font-size: 14px; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f9fafb; font-weight: 700; color: #374151; }
+        tr:hover { background: #f9fafb; }
+        .badge { 
+            padding: 5px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 700;
+            display: inline-block;
+        }
+        .badge-tp { background: #d1fae5; color: #065f46; }
+        .badge-fn { background: #fef3c7; color: #92400e; }
+        .badge-fp { background: #fee2e2; color: #991b1b; }
+        .badge-tn { background: #dbeafe; color: #1e40af; }
+        .badge-lock { background: #f3f4f6; color: #4b5563; }
         .hidden { display: none !important; }
-        .progress-bar { height: 10px; background: #e9ecef; border-radius: 5px; overflow: hidden; margin: 10px 0; }
-        .progress-fill { height: 100%; background: #667eea; transition: width 0.3s; }
+        .alert { 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 15px 0;
+            background: #e0e7ff;
+            border-left: 4px solid #667eea;
+        }
+        .alert-warning { background: #fef3c7; border-color: #f59e0b; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+        .progress-bar { height: 10px; background: #e5e7eb; border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.5s; }
+        .cs-score-card { 
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #bae6fd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .score-value { 
+            font-size: 48px; 
+            font-weight: 800; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .mapping-row { 
+            display: grid; 
+            grid-template-columns: 200px 1fr; 
+            gap: 15px; 
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        select, input { 
+            padding: 10px; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 8px;
+            width: 100%;
+            font-size: 14px;
+        }
+        select:focus, input:focus { outline: none; border-color: #667eea; }
         .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .filter-bar select, .filter-bar input { padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
-        .alert { padding: 15px; background: #e7f3ff; border-left: 4px solid #667eea; margin: 10px 0; border-radius: 5px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 <base target="_blank">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>CS Pro Analytics</h1>
-            <div class="nav">
-                <button onclick="showSection('upload')" id="btn-upload" class="active">Yükle</button>
-                <button onclick="showSection('dashboard')" id="btn-dashboard">Dashboard</button>
-                <button onclick="showSection('scores')" id="btn-scores">CS Puanları</button>
-                <button onclick="showSection('details')" id="btn-details">Detaylar</button>
-                <button onclick="showSection('config')" id="btn-config">Ayarlar</button>
+            <div>
+                <h1><i class="fas fa-chart-line"></i> CS Pro Analytics</h1>
+                <p style="color: #6b7280; margin-top: 5px;">Profesyonel CS Performans Değerlendirme</p>
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('upload')">Yükleme</button>
+                <button class="nav-tab" onclick="showTab('dashboard')">Dashboard</button>
+                <button class="nav-tab" onclick="showTab('scores')">CS Puanları</button>
+                <button class="nav-tab" onclick="showTab('details')">Detaylar</button>
             </div>
         </div>
 
-        <!-- Upload Section -->
-        <div id="section-upload" class="section active">
-            <h2>Excel Dosyası Yükleme</h2>
-            <div class="upload-zone" id="dropZone">
-                <h3>📁 Dosyayı Buraya Sürükleyin veya Tıklayın</h3>
-                <p>.xlsx formatı desteklenir</p>
-                <input type="file" id="fileInput" accept=".xlsx" style="display: none;">
-            </div>
-            <div style="margin-top: 20px; text-align: center;">
-                <button class="btn btn-secondary" onclick="loadDemoData()">Demo Veri Yükle</button>
+        <!-- Upload Tab -->
+        <div id="tab-upload" class="tab-content active">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;"><i class="fas fa-file-excel"></i> Excel Rapor Yükleme</h2>
+                <div class="upload-area" id="uploadZone">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #667eea; margin-bottom: 15px;"></i>
+                    <h3>Dosyanızı Sürükleyin veya Tıklayın</h3>
+                    <p style="color: #6b7280; margin-top: 10px;">Desteklenen format: .xlsx, .xls</p>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="loadDemo()">
+                        <i class="fas fa-vial"></i> Demo Veri ile Test Et
+                    </button>
+                </div>
             </div>
 
-            <div id="mappingPanel" class="hidden" style="margin-top: 30px;">
-                <h3>Sütun Eşleştirme</h3>
+            <!-- Column Mapping -->
+            <div id="mappingSection" class="card hidden">
+                <h3 style="margin-bottom: 20px;"><i class="fas fa-columns"></i> Sütun Eşleştirme</h3>
+                <p style="color: #6b7280; margin-bottom: 20px;">Excel sütunlarını sistem alanlarıyla eşleştirin:</p>
                 <div id="mappingContainer"></div>
-                <button class="btn" onclick="processData()" style="margin-top: 20px;">Analizi Başlat</button>
+                <div style="margin-top: 25px;">
+                    <button class="btn" onclick="startAnalysis()">
+                        <i class="fas fa-play"></i> Analizi Başlat
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Dashboard Section -->
-        <div id="section-dashboard" class="section">
-            <h2>Genel Bakış</h2>
-            <div class="grid-4">
-                <div class="stat-card">
-                    <div class="stat-label">Doğru İşlem (TP)</div>
-                    <div class="stat-value" id="val-tp">0</div>
+        <!-- Dashboard Tab -->
+        <div id="tab-dashboard" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card tp">
+                    <div class="stat-label">DOĞRU İŞLEM (TP)</div>
+                    <div class="stat-value" id="stat-tp">0</div>
+                    <div style="font-size: 12px; color: #10b981;">✓ Beklenen işlem yapılmış</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Eksik İşlem (FN)</div>
-                    <div class="stat-value" id="val-fn">0</div>
+                <div class="stat-card fn">
+                    <div class="stat-label">EKSIK İŞLEM (FN)</div>
+                    <div class="stat-value" id="stat-fn">0</div>
+                    <div style="font-size: 12px; color: #f59e0b;">⚠ İşlem yapılması gerekliydi</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Fazla İşlem (FP)</div>
-                    <div class="stat-value" id="val-fp">0</div>
+                <div class="stat-card fp">
+                    <div class="stat-label">FAZLA İŞLEM (FP)</div>
+                    <div class="stat-value" id="stat-fp">0</div>
+                    <div style="font-size: 12px; color: #ef4444;">✗ Gereksiz işlem</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Toplam</div>
-                    <div class="stat-value" id="val-total">0</div>
+                <div class="stat-card tn">
+                    <div class="stat-label">DOĞRU PASİF (TN)</div>
+                    <div class="stat-value" id="stat-tn">0</div>
+                    <div style="font-size: 12px; color: #3b82f6;">✓ İşlem gerekmezdi</div>
+                </div>
+                <div class="stat-card lock">
+                    <div class="stat-label">24 SAAT KİLİDİ</div>
+                    <div class="stat-value" id="stat-lock">0</div>
+                    <div style="font-size: 12px; color: #6b7280;">🔒 Kilitli raporlar</div>
+                </div>
+                <div class="stat-card" style="border-color: #8b5cf6;">
+                    <div class="stat-label">TOPLAM RAPOR</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div style="font-size: 12px; color: #8b5cf6;">📊 Analiz edilen</div>
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div><canvas id="chart1"></canvas></div>
-                <div><canvas id="chart2"></canvas></div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="margin-bottom: 20px;">Değerlendirme Dağılımı</h3>
+                    <canvas id="chartPie" height="250"></canvas>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 20px;">Saatlik Rapor Yoğunluğu</h3>
+                    <canvas id="chartBar" height="250"></canvas>
+                </div>
             </div>
         </div>
 
-        <!-- Scores Section -->
-        <div id="section-scores" class="section">
-            <h2>CS Performans Puanlaması</h2>
+        <!-- CS Scores Tab -->
+        <div id="tab-scores" class="tab-content">
             <div class="alert">
-                <strong>Puanlama Kriterleri:</strong><br>
-                1. Etkili İşlem Oranı (60%): ≥%80=18p, ≥%60=13p, ≥%40=8p, <%40=3p<br>
-                2. İşlem Süresi (40%): ≤24s=12p, >24s=4p
+                <strong><i class="fas fa-info-circle"></i> Puanlama Kriterleri:</strong><br>
+                <strong>1. Etkili İşlem Oranı (%60):</strong> ≥%80=18p, ≥%60=13p, ≥%40=8p, <%40=3p<br>
+                <strong>2. İşlem Süresi (%40):</strong> ≤24s=12p, >24s=4p<br>
+                <strong>Toplam Puan = (Etkililik × 0.60) + (Hız × 0.40)</strong>
             </div>
-            <div id="csScores" class="cs-grid"></div>
-            <canvas id="csChart" style="margin-top: 30px;"></canvas>
-        </div>
-
-        <!-- Details Section -->
-        <div id="section-details" class="section">
-            <h2>Detaylı Kayıtlar</h2>
-            <div class="filter-bar">
-                <select id="filterCS" onchange="applyFilters()"><option value="">Tüm CS'ler</option></select>
-                <select id="filterType" onchange="applyFilters()"><option value="">Tüm Tipler</option></select>
-                <select id="filterResult" onchange="applyFilters()">
-                    <option value="">Tüm Sonuçlar</option>
-                    <option value="TP">TP - Doğru</option>
-                    <option value="FN">FN - Eksik</option>
-                    <option value="FP">FP - Fazla</option>
-                    <option value="LOCK">Kilitli</option>
-                </select>
-                <button class="btn" onclick="exportData()">Excel İndir</button>
-            </div>
-            <div style="overflow-x: auto;">
-                <table id="detailsTable">
-                    <thead>
-                        <tr>
-                            <th>Tarih</th>
-                            <th>ID</th>
-                            <th>Tip</th>
-                            <th>Vardiya</th>
-                            <th>Sonuç</th>
-                            <th>Süre(s)</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <div id="csScoresContainer"></div>
+            <div class="card" style="margin-top: 20px;">
+                <h3>CS Karşılaştırma Grafiği</h3>
+                <canvas id="chartCs" height="100"></canvas>
             </div>
         </div>
 
-        <!-- Config Section -->
-        <div id="section-config" class="section">
-            <h2>Ayarlar</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                <div>
-                    <h3>Vardiya Saatleri</h3>
-                    <div id="shiftConfig"></div>
-                    <button class="btn" onclick="saveConfig()">Kaydet</button>
+        <!-- Details Tab -->
+        <div id="tab-details" class="tab-content">
+            <div class="card">
+                <div class="filter-bar">
+                    <select id="filterCs" onchange="filterData()"><option value="">Tüm CS'ler</option></select>
+                    <select id="filterType" onchange="filterData()"><option value="">Tüm Tipler</option></select>
+                    <select id="filterEval" onchange="filterData()">
+                        <option value="">Tüm Sonuçlar</option>
+                        <option value="TP">✓ Doğru İşlem</option>
+                        <option value="FN">⚠ Eksik İşlem</option>
+                        <option value="FP">✗ Fazla İşlem</option>
+                        <option value="TN">○ Doğru Pasif</option>
+                        <option value="LOCK">🔒 Kilitli</option>
+                    </select>
+                    <button class="btn btn-success" onclick="exportExcel()">
+                        <i class="fas fa-download"></i> Excel İndir
+                    </button>
                 </div>
-                <div>
-                    <h3>OpenAI API (Opsiyonel)</h3>
-                    <div class="config-group">
-                        <label>API Key</label>
-                        <input type="password" id="apiKey" placeholder="sk-...">
-                    </div>
-                    <button class="btn" onclick="saveApiKey()">API Key Kaydet</button>
+                <div style="overflow-x: auto;">
+                    <table id="detailsTable">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>ID</th>
+                                <th>Tip</th>
+                                <th>Vardiya</th>
+                                <th>Değerlendirme</th>
+                                <th>Süre (saat)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== GLOBAL VARIABLES ====================
+        // Global Variables
         let rawData = [];
         let processedData = [];
         let columnMap = {};
         let charts = {};
 
         // Configuration
-        let config = {
+        const config = {
             shifts: {
                 'Tolga': { start: 2, end: 8 },
                 'shikai': { start: 2, end: 8 },
@@ -196,65 +325,50 @@
                 'Abuse': 'required',
                 'Harassment': 'required',
                 'Religion': 'optional',
-                'Spam': 'optional'
+                'Spam': 'optional',
+                'Advertising': 'optional'
             }
         };
 
-        // Load saved config
-        if(localStorage.getItem('cs_config')) {
-            config = JSON.parse(localStorage.getItem('cs_config'));
+        // Tab Navigation
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
         }
 
-        // ==================== NAVIGATION ====================
-        function showSection(name) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-
-            // Show selected
-            document.getElementById('section-' + name).classList.add('active');
-            document.getElementById('btn-' + name).classList.add('active');
-
-            // Render if needed
-            if(name === 'scores' && processedData.length > 0) renderScores();
-            if(name === 'config') renderConfig();
-        }
-
-        // ==================== FILE UPLOAD ====================
-        const dropZone = document.getElementById('dropZone');
+        // File Upload
+        const uploadZone = document.getElementById('uploadZone');
         const fileInput = document.getElementById('fileInput');
 
-        dropZone.addEventListener('click', function() {
-            fileInput.click();
-        });
+        uploadZone.addEventListener('click', () => fileInput.click());
 
-        dropZone.addEventListener('dragover', function(e) {
+        uploadZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            dropZone.style.background = '#e0e0ff';
+            uploadZone.style.borderColor = '#667eea';
+            uploadZone.style.background = '#f0f0ff';
         });
 
-        dropZone.addEventListener('dragleave', function() {
-            dropZone.style.background = '#fafafa';
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.style.borderColor = '#d1d5db';
+            uploadZone.style.background = '#f9fafb';
         });
 
-        dropZone.addEventListener('drop', function(e) {
+        uploadZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            dropZone.style.background = '#fafafa';
-            if(e.dataTransfer.files.length) {
-                handleFile(e.dataTransfer.files[0]);
-            }
+            uploadZone.style.borderColor = '#d1d5db';
+            uploadZone.style.background = '#f9fafb';
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
         });
 
-        fileInput.addEventListener('change', function(e) {
-            if(e.target.files.length) {
-                handleFile(e.target.files[0]);
-            }
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
         });
 
         function handleFile(file) {
-            console.log('File selected:', file.name);
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -268,54 +382,45 @@
                         return obj;
                     });
 
-                    console.log('Data loaded:', rawData.length, 'rows');
-                    showMappingPanel(headers);
-                } catch(err) {
+                    showMapping(headers);
+                } catch (err) {
                     alert('Dosya okuma hatası: ' + err.message);
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        function showMappingPanel(headers) {
-            const panel = document.getElementById('mappingPanel');
+        function showMapping(headers) {
+            document.getElementById('mappingSection').classList.remove('hidden');
             const container = document.getElementById('mappingContainer');
-            panel.classList.remove('hidden');
 
             const fields = [
-                { key: 'time', label: 'Rapor Zamanı (举报时间)', required: true },
-                { key: 'id', label: 'Şikayet Edilen ID (被举报人)', required: true },
-                { key: 'type', label: 'Rapor Tipi (举报类型)', required: true },
-                { key: 'text', label: 'Rapor Metni (举报内容)', required: false },
-                { key: 'handler', label: 'İşlem Yapan (回复人)', required: false },
-                { key: 'handle_time', label: 'İşlem Zamanı (回复时间)', required: false },
-                { key: 'result', label: 'Sonuç (处罚结果)', required: false }
+                { key: 'time', label: '📅 Rapor Zamanı', req: true, match: ['time', '时间', 'tarih'] },
+                { key: 'id', label: '🆔 Şikayet Edilen ID', req: true, match: ['id', '举报人', 'kullanici'] },
+                { key: 'type', label: '🏷️ Rapor Tipi', req: true, match: ['type', '类型', 'tip'] },
+                { key: 'text', label: '📝 Rapor Metni', req: false, match: ['text', '内容', 'metin'] },
+                { key: 'handler', label: '👤 İşlem Yapan', req: false, match: ['handler', '回复人', 'cs'] },
+                { key: 'handle_time', label: '⚡ İşlem Zamanı', req: false, match: ['handle', '回复时间', 'islem'] },
+                { key: 'result', label: '✅ Sonuç', req: false, match: ['result', '处罚', 'sonuc'] }
             ];
 
-            container.innerHTML = fields.map(f => `
-                <div class="config-group">
-                    <label>${f.label} ${f.required ? '*' : ''}</label>
-                    <select id="map_${f.key}">
-                        <option value="">Seçin...</option>
-                        ${headers.map(h => `<option value="${h}">${h}</option>`).join('')}
-                    </select>
-                </div>
-            `).join('');
+            container.innerHTML = fields.map(f => {
+                const match = headers.find(h => f.match.some(m => h.toLowerCase().includes(m.toLowerCase())));
+                return `
+                    <div class="mapping-row">
+                        <label style="font-weight: 600;">${f.label} ${f.req ? '<span style="color:red">*</span>' : ''}</label>
+                        <select id="map_${f.key}">
+                            <option value="">Seçin...</option>
+                            ${headers.map(h => `<option value="${h}" ${h === match ? 'selected' : ''}>${h}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            }).join('');
 
-            // Auto-match
-            fields.forEach(f => {
-                const select = document.getElementById('map_' + f.key);
-                const match = headers.find(h => 
-                    h.toLowerCase().includes(f.key) || 
-                    f.label.toLowerCase().includes(h.toLowerCase())
-                );
-                if(match) select.value = match;
-            });
+            document.getElementById('mappingSection').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // ==================== DATA PROCESSING ====================
-        function processData() {
-            // Get mappings
+        function startAnalysis() {
             columnMap = {
                 time: document.getElementById('map_time').value,
                 id: document.getElementById('map_id').value,
@@ -326,13 +431,14 @@
                 result: document.getElementById('map_result')?.value || ''
             };
 
-            if(!columnMap.time || !columnMap.id) {
+            if (!columnMap.time || !columnMap.id) {
                 alert('Zorunlu alanları doldurun!');
                 return;
             }
 
             analyzeData();
-            showSection('dashboard');
+            showTab('dashboard');
+            document.querySelector('.nav-tab:nth-child(2)').click();
             renderDashboard();
         }
 
@@ -340,7 +446,6 @@
             processedData = [];
             const userLastAction = {};
 
-            // Sort by time
             rawData.sort((a, b) => new Date(a[columnMap.time]) - new Date(b[columnMap.time]));
 
             rawData.forEach(row => {
@@ -352,175 +457,180 @@
                 const actionResult = row[columnMap.result] || '';
 
                 const hour = reportTime.getHours();
-
-                // Find shift
                 let shiftCS = '';
-                for(const [cs, shift] of Object.entries(config.shifts)) {
-                    if(shift.overnight) {
-                        if(hour >= shift.start || hour < shift.end) shiftCS = cs;
+
+                for (const [cs, shift] of Object.entries(config.shifts)) {
+                    if (shift.overnight) {
+                        if (hour >= shift.start || hour < shift.end) shiftCS = cs;
                     } else {
-                        if(hour >= shift.start && hour < shift.end) shiftCS = cs;
+                        if (hour >= shift.start && hour < shift.end) shiftCS = cs;
                     }
                 }
 
-                // 24h lock check
                 let lockStatus = 'NONE';
-                if(userLastAction[reportedId]) {
+                if (userLastAction[reportedId]) {
                     const diff = (reportTime - userLastAction[reportedId]) / (1000 * 60 * 60);
-                    if(diff < 24) lockStatus = 'LOCKED';
+                    if (diff < 24) lockStatus = 'LOCKED';
                 }
 
                 const actionTaken = !!(handleTime || actionResult);
-
-                // Duration
                 let duration = null;
-                if(actionTaken && handleTime) {
-                    duration = (handleTime - reportTime) / (1000 * 60 * 60); // hours
+                if (actionTaken && handleTime) {
+                    duration = (handleTime - reportTime) / (1000 * 60 * 60);
                 }
 
-                // Expected action
-                let expected = 'no';
-                if(config.rules[reportType] === 'required') expected = 'yes';
+                const expected = config.rules[reportType] === 'required';
 
-                // Evaluation
-                let eval = '';
-                if(lockStatus === 'LOCKED' && !actionTaken) eval = 'LOCK_OK';
-                else if(lockStatus === 'LOCKED' && actionTaken) eval = 'LOCK_VIOLATION';
-                else if(expected === 'yes' && actionTaken) eval = 'TP';
-                else if(expected === 'yes' && !actionTaken) eval = 'FN';
-                else if(expected === 'no' && actionTaken) eval = 'FP';
-                else eval = 'TN';
+                let evaluation = '';
+                if (lockStatus === 'LOCKED' && !actionTaken) evaluation = 'LOCK_OK';
+                else if (lockStatus === 'LOCKED' && actionTaken) evaluation = 'LOCK_VIOLATION';
+                else if (expected && actionTaken) evaluation = 'TP';
+                else if (expected && !actionTaken) evaluation = 'FN';
+                else if (!expected && actionTaken) evaluation = 'FP';
+                else evaluation = 'TN';
 
-                // Update last action
-                if(actionTaken && handleTime) {
-                    userLastAction[reportedId] = handleTime;
-                }
+                if (actionTaken && handleTime) userLastAction[reportedId] = handleTime;
 
                 processedData.push({
-                    reportTime, reportedId, reportType, handler, shiftCS,
-                    actionTaken, duration, expected, evaluation: eval, lockStatus
+                    reportTime, reportedId, reportType, shiftCS, handler,
+                    actionTaken, duration, evaluation, lockStatus
                 });
             });
-
-            console.log('Processed:', processedData.length);
         }
 
-        // ==================== DASHBOARD ====================
         function renderDashboard() {
             const counts = {
                 TP: processedData.filter(d => d.evaluation === 'TP').length,
                 FN: processedData.filter(d => d.evaluation === 'FN').length,
                 FP: processedData.filter(d => d.evaluation === 'FP').length,
+                TN: processedData.filter(d => d.evaluation === 'TN').length,
+                LOCK: processedData.filter(d => d.lockStatus === 'LOCKED').length,
                 total: processedData.length
             };
 
-            document.getElementById('val-tp').textContent = counts.TP;
-            document.getElementById('val-fn').textContent = counts.FN;
-            document.getElementById('val-fp').textContent = counts.FP;
-            document.getElementById('val-total').textContent = counts.total;
+            document.getElementById('stat-tp').textContent = counts.TP;
+            document.getElementById('stat-fn').textContent = counts.FN;
+            document.getElementById('stat-fp').textContent = counts.FP;
+            document.getElementById('stat-tn').textContent = counts.TN;
+            document.getElementById('stat-lock').textContent = counts.LOCK;
+            document.getElementById('stat-total').textContent = counts.total;
 
             // Charts
-            if(charts.c1) charts.c1.destroy();
-            if(charts.c2) charts.c2.destroy();
+            if (charts.pie) charts.pie.destroy();
+            if (charts.bar) charts.bar.destroy();
 
-            const ctx1 = document.getElementById('chart1').getContext('2d');
-            charts.c1 = new Chart(ctx1, {
+            const ctx1 = document.getElementById('chartPie').getContext('2d');
+            charts.pie = new Chart(ctx1, {
                 type: 'doughnut',
                 data: {
-                    labels: ['TP', 'FN', 'FP', 'TN', 'Lock'],
+                    labels: ['TP (Doğru)', 'FN (Eksik)', 'FP (Fazla)', 'TN (Pasif)', 'Lock'],
                     datasets: [{
-                        data: [
-                            counts.TP,
-                            counts.FN,
-                            counts.FP,
-                            processedData.filter(d => d.evaluation === 'TN').length,
-                            processedData.filter(d => d.lockStatus === 'LOCKED').length
-                        ],
-                        backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d']
+                        data: [counts.TP, counts.FN, counts.FP, counts.TN, counts.LOCK],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#6b7280']
                     }]
-                }
+                },
+                options: { responsive: true, maintainAspectRatio: false }
             });
 
-            // Hourly chart
             const hours = {};
-            for(let i=0; i<24; i++) hours[i] = 0;
+            for (let i = 0; i < 24; i++) hours[i] = 0;
             processedData.forEach(d => hours[d.reportTime.getHours()]++);
 
-            const ctx2 = document.getElementById('chart2').getContext('2d');
-            charts.c2 = new Chart(ctx2, {
+            const ctx2 = document.getElementById('chartBar').getContext('2d');
+            charts.bar = new Chart(ctx2, {
                 type: 'bar',
                 data: {
                     labels: Object.keys(hours).map(h => h + ':00'),
                     datasets: [{ label: 'Rapor', data: Object.values(hours), backgroundColor: '#667eea' }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
                 }
             });
+
+            renderCsScores();
+            renderDetails();
         }
 
-        // ==================== CS SCORES ====================
         function calculateScore(csData) {
             const total = csData.length;
             const correct = csData.filter(d => d.evaluation === 'TP' || d.evaluation === 'TN').length;
             const rate = total > 0 ? (correct / total) * 100 : 0;
 
             let effScore = 0;
-            if(rate >= 80) effScore = 18;
-            else if(rate >= 60) effScore = 13;
-            else if(rate >= 40) effScore = 8;
+            if (rate >= 80) effScore = 18;
+            else if (rate >= 60) effScore = 13;
+            else if (rate >= 40) effScore = 8;
             else effScore = 3;
 
             const processed = csData.filter(d => d.actionTaken && d.duration !== null);
             let speedScore = 0;
-            if(processed.length > 0) {
+            if (processed.length > 0) {
                 const avg = processed.reduce((s, d) => s + d.duration, 0) / processed.length;
                 speedScore = avg <= 24 ? 12 : 4;
             }
-
-            const totalScore = (effScore * 0.6) + (speedScore * 0.4);
 
             return {
                 rate: rate.toFixed(1),
                 effScore,
                 speedScore,
-                totalScore: totalScore.toFixed(1),
+                totalScore: ((effScore * 0.6) + (speedScore * 0.4)).toFixed(1),
                 total,
                 processed: processed.length
             };
         }
 
-        function renderScores() {
+        function renderCsScores() {
             const groups = {};
             processedData.forEach(d => {
-                if(!groups[d.shiftCS]) groups[d.shiftCS] = [];
+                if (!groups[d.shiftCS]) groups[d.shiftCS] = [];
                 groups[d.shiftCS].push(d);
             });
 
-            const container = document.getElementById('csScores');
+            const container = document.getElementById('csScoresContainer');
             container.innerHTML = '';
 
             const scores = [];
             Object.entries(groups).forEach(([name, data]) => {
                 const s = calculateScore(data);
-                scores.push({name, ...s});
+                scores.push({ name, ...s });
 
                 container.innerHTML += `
-                    <div class="cs-card">
-                        <h3>${name}</h3>
-                        <div style="font-size: 32px; font-weight: bold; color: #667eea; margin: 10px 0;">
-                            ${s.totalScore} <small style="font-size: 14px; color: #666;">/ 30</small>
+                    <div class="cs-score-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="color: #1e40af; margin-bottom: 5px;">${name}</h3>
+                                <p style="color: #6b7280; font-size: 14px;">${s.total} rapor | ${s.processed} işlem</p>
+                            </div>
+                            <div style="text-align: center;">
+                                <div class="score-value">${s.totalScore}</div>
+                                <div style="font-size: 12px; color: #6b7280;">/ 30 puan</div>
+                            </div>
                         </div>
-                        <div>Etkililik: %${s.rate} (${s.effScore}p)</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(s.effScore/18)*100}%; background: #28a745;"></div>
+                        <div style="margin-top: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px;">
+                                <span>Etkililik: %${s.rate} (${s.effScore}p)</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${(s.effScore/18)*100}%; background: #10b981;"></div>
+                            </div>
                         </div>
-                        <div style="margin-top: 10px;">Hız Puanı: ${s.speedScore}p</div>
-                        <div>Toplam: ${s.total} | İşlem: ${s.processed}</div>
+                        <div style="margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px;">
+                                <span>Hız Puanı: ${s.speedScore}p</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${(s.speedScore/12)*100}%; background: #3b82f6;"></div>
+                            </div>
+                        </div>
                     </div>
                 `;
             });
 
-            // Chart
-            if(charts.cs) charts.cs.destroy();
-            const ctx = document.getElementById('csChart').getContext('2d');
+            if (charts.cs) charts.cs.destroy();
+            const ctx = document.getElementById('chartCs').getContext('2d');
             charts.cs = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -528,126 +638,97 @@
                     datasets: [{
                         label: 'Toplam Puan',
                         data: scores.map(s => s.totalScore),
-                        backgroundColor: '#667eea'
+                        backgroundColor: '#667eea',
+                        borderRadius: 8
                     }]
                 },
-                options: { scales: { y: { beginAtZero: true, max: 30 } } }
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, max: 30 } }
+                }
             });
         }
 
-        // ==================== DETAILS ====================
-        function applyFilters() {
-            const cs = document.getElementById('filterCS').value;
+        function renderDetails() {
+            const csSelect = document.getElementById('filterCs');
+            const typeSelect = document.getElementById('filterType');
+
+            const csList = [...new Set(processedData.map(d => d.shiftCS))];
+            const typeList = [...new Set(processedData.map(d => d.reportType))];
+
+            csSelect.innerHTML = '<option value="">Tüm CS'ler</option>' + 
+                csList.map(c => `<option value="${c}">${c}</option>`).join('');
+            typeSelect.innerHTML = '<option value="">Tüm Tipler</option>' + 
+                typeList.map(t => `<option value="${t}">${t}</option>`).join('');
+
+            filterData();
+        }
+
+        function filterData() {
+            const cs = document.getElementById('filterCs').value;
             const type = document.getElementById('filterType').value;
-            const result = document.getElementById('filterResult').value;
+            const evalFilter = document.getElementById('filterEval').value;
 
             const filtered = processedData.filter(d => {
-                if(cs && d.shiftCS !== cs) return false;
-                if(type && d.reportType !== type) return false;
-                if(result && d.evaluation !== result) return false;
+                if (cs && d.shiftCS !== cs) return false;
+                if (type && d.reportType !== type) return false;
+                if (evalFilter && d.evaluation !== evalFilter) return false;
                 return true;
             });
 
-            renderTable(filtered);
-        }
-
-        function renderTable(data) {
             const tbody = document.querySelector('#detailsTable tbody');
-            tbody.innerHTML = data.map(d => `
+            tbody.innerHTML = filtered.map(d => `
                 <tr>
                     <td>${d.reportTime.toLocaleString()}</td>
                     <td>${d.reportedId}</td>
                     <td>${d.reportType}</td>
                     <td>${d.shiftCS}</td>
-                    <td><span class="badge badge-${d.evaluation.toLowerCase()}">${d.evaluation}</span></td>
+                    <td><span class="badge badge-${d.evaluation.toLowerCase().replace('_ok','')}">${d.evaluation}</span></td>
                     <td>${d.duration ? d.duration.toFixed(1) : '-'}</td>
                 </tr>
             `).join('');
         }
 
-        // ==================== EXPORT ====================
-        function exportData() {
+        function exportExcel() {
             const data = processedData.map(d => ({
                 Tarih: d.reportTime.toLocaleString(),
                 ID: d.reportedId,
                 Tip: d.reportType,
                 CS: d.shiftCS,
-                Sonuc: d.evaluation,
+                Degerlendirme: d.evaluation,
                 Sure: d.duration ? d.duration.toFixed(1) : '-'
             }));
 
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Rapor");
-            XLSX.writeFile(wb, "CS_Analiz.xlsx");
+            XLSX.writeFile(wb, "CS_Analiz_Raporu.xlsx");
         }
 
-        // ==================== CONFIG ====================
-        function renderConfig() {
-            const div = document.getElementById('shiftConfig');
-            div.innerHTML = Object.entries(config.shifts).map(([name, s]) => `
-                <div class="config-group">
-                    <label>${name}</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="number" id="shift_${name}_start" value="${s.start}" placeholder="Başlangıç" style="width: 100px;">
-                        <input type="number" id="shift_${name}_end" value="${s.end}" placeholder="Bitiş" style="width: 100px;">
-                        <label><input type="checkbox" id="shift_${name}_overnight" ${s.overnight ? 'checked' : ''}> Gece</label>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function saveConfig() {
-            Object.keys(config.shifts).forEach(name => {
-                config.shifts[name].start = parseInt(document.getElementById(`shift_${name}_start`).value);
-                config.shifts[name].end = parseInt(document.getElementById(`shift_${name}_end`).value);
-                config.shifts[name].overnight = document.getElementById(`shift_${name}_overnight`).checked;
-            });
-            localStorage.setItem('cs_config', JSON.stringify(config));
-            alert('Kaydedildi!');
-        }
-
-        function saveApiKey() {
-            const key = document.getElementById('apiKey').value;
-            localStorage.setItem('openai_key', key);
-            alert('API Key kaydedildi!');
-        }
-
-        // ==================== DEMO ====================
-        function loadDemoData() {
-            console.log('Loading demo data...');
+        function loadDemo() {
             const demo = [];
             const types = Object.keys(config.rules);
+            const now = new Date();
 
-            for(let i=0; i<50; i++) {
-                const date = new Date('2026-02-26');
-                date.setHours(Math.floor(Math.random() * 24));
-                date.setMinutes(Math.floor(Math.random() * 60));
-
+            for (let i = 0; i < 100; i++) {
+                const date = new Date(now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000);
                 const type = types[Math.floor(Math.random() * types.length)];
                 const hasAction = Math.random() > 0.3;
-                const handler = hasAction ? Object.keys(config.shifts)[Math.floor(Math.random() * 6)] : '';
 
                 demo.push({
                     '举报时间': date.toISOString(),
-                    '被举报人': 'user_' + Math.floor(Math.random() * 20),
+                    '被举报人': 'user_' + Math.floor(Math.random() * 30),
                     '举报类型': type,
                     '举报内容': 'Demo içerik ' + i,
-                    '回复人': handler,
-                    '回复时间': hasAction ? new Date(date.getTime() + Math.random() * 3600000).toISOString() : '',
+                    '回复人': hasAction ? 'Tolga' : '',
+                    '回复时间': hasAction ? new Date(date.getTime() + Math.random() * 20 * 60 * 60 * 1000).toISOString() : '',
                     '处罚结果': hasAction ? 'Mute' : ''
                 });
             }
 
             rawData = demo;
-            showMappingPanel(Object.keys(demo[0]));
+            showMapping(Object.keys(demo[0]));
         }
-
-        // Load saved API key
-        const savedKey = localStorage.getItem('openai_key');
-        if(savedKey) document.getElementById('apiKey').value = savedKey;
-
-        console.log('App loaded successfully');
     </script>
 </body>
 </html>
